@@ -19,9 +19,7 @@ request.setAttribute("basePath",  basePath);
 <script type="text/javascript">
 Ext.onReady(function () {
 	
-	
 	Ext.QuickTips.init(); //显示提示信息 
-	
 	Ext.define('Person', {
 	    extend: 'Ext.data.Model',
 	    fields: [{name: 'id',
@@ -41,8 +39,8 @@ Ext.onReady(function () {
 	});
     
     // 相当于一个数据源  
-    var store = new Ext.data.JsonStore({  
-    	model:'Person',
+    var store = Ext.create('Ext.data.Store', {
+        model: 'Person',
         proxy: {
             type: 'ajax',
             url: '<%=basePath %>/AdminServlet?param=read',
@@ -50,15 +48,16 @@ Ext.onReady(function () {
                 type: 'json',
                 root: 'data',
                 totalProperty:"total"
+            },
+            writer: {
+                type: 'json'
             }
-        },
-    });  
+        }
+    });
       
     //1将向后台发出一个请求，请求中包含的参数是start和limit(每页显示的行数)  
     store.load({params:{start:0,limit:20}});  
   
-    //CheckBox选择框  
-    var sm = new Ext.grid.CheckboxSelectionModel();  
       
     //创建表单的窗口  
     var createFormWindow = function(){  
@@ -98,7 +97,7 @@ Ext.onReady(function () {
                            icon:'download'  
                        });  
                        postForm.form.doAction('submit',{//2通过form向后台发出请求  
-                         url:"person!save.action",  
+                         url:"<%=basePath %>/AdminServlet?param=add", //此时不是json形式提交 
                          method:'post',  
                          params:'',  
                          success:function(form,action){  
@@ -123,9 +122,8 @@ Ext.onReady(function () {
         });  
           
           
-        //将表单放到一个窗口中，并显示  
-        var postWindow = new Ext.Window({  
-            title: "人员信息表单",  
+        var postWindow = Ext.create('Ext.window.Window',{
+        	title: "人员信息表单",  
             width: 600,  
             height:500,  
             collapsible:true,  
@@ -134,13 +132,13 @@ Ext.onReady(function () {
             plain:true,  
             bodyStyle:'padding:5px;',  
             modal:true,  
-            items: postForm  
-        });  
+            items: postForm
+        });
           
         postWindow.show();  
         return postForm;  
     };    
-      
+    
     var tbars = [ //在GridPanel列表界面头部的按钮，包括：添加、删除按钮  
         //添加按钮  
         {  
@@ -186,24 +184,23 @@ Ext.onReady(function () {
             }  
         }  
         }  
-    ];        
+    ];     
       
   
       
     // create the Grid  
-    var grid = new Ext.grid.GridPanel({  
-        store: store,  
+    var grid = Ext.create("Ext.grid.Panel", {
+    	store: store,  
         columns: [  
-            sm,  
-            {header: "序号", width: 50, sortable: true, dataIndex: 'id'},  
-            {header: "姓名", width: 275, sortable: true,  dataIndex: 'email'},  
-            {header: "性别", width: 100, sortable: true,  dataIndex: 'first'},  
-            {header: "年龄", width: 100, sortable: true,  dataIndex: 'last'} 
+            {header: "id", width: 50, sortable: true, dataIndex: 'id'},  
+            {header: "email", width: 275, sortable: true,  dataIndex: 'email'},  
+            {header: "first", width: 100, sortable: true,  dataIndex: 'first'},  
+            {header: "last", width: 100, sortable: true,  dataIndex: 'last'} 
         ],  
         height:350,  
         width:900,  
         title:'人员数据信息列表',  
-        sm : sm,  
+        selModel: {  selType:'checkboxmodel'},
         bbar:new Ext.PagingToolbar({  
             pageSize: 20,  
             store: store,  
@@ -212,7 +209,8 @@ Ext.onReady(function () {
             emptyMsg: "没有记录"  
         }),  
         tbar:tbars  
-    });  
+    });
+   
       
     grid.on("rowdblclick",function(){  
         var _record = sm.getSelected();  
@@ -229,7 +227,7 @@ Ext.onReady(function () {
         }else{  
             Ext.Msg.alert('修改操作','您必须选择一行数据以便修改！');  
         }  
-    });  
+    });   
   
     grid.render('grid-example');  
     
@@ -237,6 +235,6 @@ Ext.onReady(function () {
 </script>
 </head>
 <body>
-<div id="grid-example"></div>
+<div id="grid-example" ></div>
 </body>
 </html>
